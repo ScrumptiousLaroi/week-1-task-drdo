@@ -1,0 +1,6 @@
+flask
+flask-session
+papermill
+ipykernel
+pandas
+scikit-learn

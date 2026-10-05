@@ -22,3 +22,28 @@ Github Username = ***ScrumptiousLaroi***
 
 EDX Username = ***puruthakur2023***
 # week-1-task-drdo
+
+## Steps to run
+
+1. Clone the repo and go to the project folder:
+   ```
+   cd Predicting-Drug-Usage-to-reduce-cancer-cell-growth-by-50--main
+   ```
+2. Create and activate a virtual environment (Python 3.10+):
+   ```
+   python3 -m venv .venv
+   source .venv/bin/activate        # Windows: .venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```
+   python -m pip install -r requirements.txt
+   ```
+4. Start the Flask app:
+   ```
+   python website/app.py
+   ```
+5. Open <http://127.0.0.1:5000> in a browser.
+6. Upload a CSV (needs columns `n_feature_pos`, `n_feature_neg`, `feature_pval`, `msi_pval`, `fdr`, `ic50_effect_size`, `Drug name`, `Drug target`, `Target Pathway`, `Feature Name`). Optionally set a **random seed**; it is passed to the Random Forest `random_state` for reproducible results.
+7. The predictions CSV appears on the result page for download (saved in `website/prediction`).
+
+
