@@ -3,6 +3,7 @@ from flask_session import Session
 import os
 import subprocess
 from datetime import datetime
+import json
 import papermill as pm
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -63,20 +64,25 @@ def process():
     if not file_path:
         return "No file uploaded in this session"
 
-    # Use the file path and additional parameters in your machine learning model
-    result = run_notebook(file_path, session.get('seed', 1))
+    # Each run writes its own timestamped prediction file into the prediction folder
+    os.makedirs(PREDICTIONS_FOLDER, exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'output'), exist_ok=True)
+    stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    prediction_path = os.path.join(PREDICTIONS_FOLDER, f'prediction_ic50_{stamp}.csv')
+    metrics_path = os.path.join(BASE_DIR, 'output', f'metrics_{stamp}.json')
 
-    # Find the most recent prediction file
-    files = [os.path.join(PREDICTIONS_FOLDER, f) for f in os.listdir(PREDICTIONS_FOLDER) if os.path.isfile(os.path.join(PREDICTIONS_FOLDER, f))]
-    if not files:
-        return "No prediction files found."
+    result = run_notebook(file_path, session.get('seed', 1), prediction_path, metrics_path)
+    if not os.path.exists(prediction_path):
+        return f"Prediction failed: {result}", 500
 
-    latest_file = max(files, key=os.path.getctime)
-    prediction_file_path = os.path.relpath(latest_file, start=PREDICTIONS_FOLDER)
+    metrics = {}
+    if os.path.exists(metrics_path):
+        with open(metrics_path) as f:
+            metrics = json.load(f)
 
-    return render_template('result.html', prediction_file_path=prediction_file_path)
+    return render_template('result.html', prediction_file_path=os.path.basename(prediction_path), metrics=metrics)
 
-def run_notebook(file_path, seed=1):
+def run_notebook(file_path, seed=1, output_path=None, metrics_path=None):
     try:
         # Paths to the input and output notebooks
         input_notebook = os.path.join(BASE_DIR, 'Machine.ipynb')
@@ -86,7 +92,8 @@ def run_notebook(file_path, seed=1):
         pm.execute_notebook(
             input_path=input_notebook,
             output_path=output_notebook,
-            parameters=dict(file_path=file_path, seed=seed)
+            parameters=dict(file_path=file_path, seed=seed, output_path=output_path, metrics_path=metrics_path),
+            cwd=BASE_DIR
         )
 
         return "Notebook executed successfully"

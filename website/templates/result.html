@@ -28,6 +28,10 @@
 
     <div class="mt-5">
         <h2>Predictions</h2>
+        {% if metrics %}
+        <p>Held-out check (25% of rows not used for training): MAE {{ "%.3f"|format(metrics.val_mae) }}, R&sup2; {{ "%.3f"|format(metrics.val_r2) }}.
+        The downloaded predictions come from a model trained on all rows, so they are not a test score.</p>
+        {% endif %}
         <div id="predictions">
             <!-- Predictions will be displayed here -->
         </div>
